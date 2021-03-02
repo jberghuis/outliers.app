@@ -87,10 +87,10 @@ if st.button('Generate Seaborn Pairplot'):
     fig.map_lower(sns.kdeplot, levels=4, color=".2")
     st.pyplot(fig)
 
-st.write('Press the button below to generate a full exploratory data analyses report (using Pandas Profiling).')
-if st.button('Generate Pandas Profiling Report'):
-    pr = ProfileReport(df.astype('object'), explorative=True)
-    st_profile_report(pr)
+#st.write('Press the button below to generate a full exploratory data analyses report (using Pandas Profiling).')
+#if st.button('Generate Pandas Profiling Report'):
+#    pr = ProfileReport(df.astype('object'), explorative=True)
+#    st_profile_report(pr)
 
 st.write('---')
 
