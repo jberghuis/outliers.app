@@ -5,8 +5,8 @@ import plotly.express as px
 import streamlit as st
 import umap
 
-from pandas_profiling import ProfileReport
-from streamlit_pandas_profiling import st_profile_report
+#from pandas_profiling import ProfileReport
+#from streamlit_pandas_profiling import st_profile_report
 
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder 
 from sklearn.preprocessing import StandardScaler
