@@ -43,7 +43,7 @@ st.write('---')
 # Select data
 st.header('**Select data**')
 st.markdown('''
-Upload your own CSV file below or continue using the example Titanic dataset.
+Upload your own CSV file below or continue using the example Pima Diabetes dataset.
 ''')
 uploaded_file = st.file_uploader("", type=["csv"])
 
