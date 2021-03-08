@@ -252,7 +252,7 @@ with col2:
         color_discrete_sequence=["red"],
         #color="anomaly",
         title="uMAP Plot with Outliers",
-        hover_data=[df_umap[][top10_list].index],
+        hover_data=[df_umap.loc[top10_list].index],
         opacity=0.7
         )
     st.write(fig_umap.show())
