@@ -228,23 +228,34 @@ with col2:
         reducer = umap.UMAP()
         embedding = reducer.fit_transform(data)
         df = pd.DataFrame(embedding)
-        df['anomaly'] = 'other'
+        #df['anomaly'] = 'other'
         return df
     df_umap = make_umap(data = X)
-
-    top10_list = top10.index.tolist()
-    df_umap['anomaly'][top10_list] = 'anomaly'
 
     fig_umap = px.scatter(
         df_umap,
         x=0,
         y=1,
-        color="anomaly",
+        #color="anomaly",
         title="uMAP Plot with Outliers",
-        hover_data=[df_umap.index],
+        #hover_data=[df_umap.index],
         opacity=0.7
         )
-    st.write(fig_umap)
+
+    top10_list = top10.index.tolist()
+    #df_umap['anomaly'][top10_list] = 'anomaly'
+
+    fig_umap.add_scatter(
+        df_umap[][top10_list],
+        x=0,
+        y=1,
+        color_discrete_sequence=["red"],
+        #color="anomaly",
+        title="uMAP Plot with Outliers",
+        hover_data=[df_umap[][top10_list].index],
+        opacity=0.7
+        )
+    st.write(fig_umap.show())
 st.write('---')
 
 
