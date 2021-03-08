@@ -246,12 +246,12 @@ with col2:
     #df_umap['anomaly'][top10_list] = 'anomaly'
 
     fig_umap.add_scatter(
-        df_umap.loc[top10_list],
-        x=0,
-        y=1,
+        x=df_umap.loc[top10_list].0,
+        y=df_umap.loc[top10_list].1,
+        #x=0,
+        #y=1,
         color_discrete_sequence=["red"],
         #color="anomaly",
-        title="uMAP Plot with Outliers",
         hover_data=[df_umap.loc[top10_list].index],
         opacity=0.7
         )
