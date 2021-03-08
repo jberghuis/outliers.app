@@ -223,11 +223,16 @@ with col1:
     st.write(top10)
 with col2:
     # UMAP
+    @st.cache
+    def make_umap(data):
+        reducer = umap.UMAP()
+        embedding = reducer.fit_transform(data)
+        df = pd.DataFrame(embedding)
+        df['anomaly'] = 'other'
+        return df
+    df_umap = make_umap(data = X)
+
     top10_list = top10.index.tolist()
-    reducer = umap.UMAP()
-    embedding = reducer.fit_transform(X)
-    df_umap = pd.DataFrame(embedding)
-    df_umap['anomaly'] = 'other'
     df_umap['anomaly'][top10_list] = 'anomaly'
 
     fig_umap = px.scatter(
