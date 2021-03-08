@@ -246,8 +246,8 @@ with col2:
     #df_umap['anomaly'][top10_list] = 'anomaly'
 
     fig_umap.add_scatter(
-        x=df_umap.[0][top10_list],
-        y=df_umap.[1][top10_list],
+        x=df_umap[0][top10_list],
+        y=df_umap[1][top10_list],
         #x=0,
         #y=1,
         color_discrete_sequence=["red"],
