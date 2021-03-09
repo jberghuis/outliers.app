@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import plotly.express as px
+import plotly.graph_objs as go
 import streamlit as st
 import umap
 
@@ -218,7 +219,7 @@ with col1:
     scores = clf.decision_scores_  # raw outlier scores
     
     st.write('Top 10 anomaly scores for the', model, 'model:')
-    df_id['scores'] = scores
+    df_id.loc[:,'scores'] = scores
     top10 = df_id.nlargest(10, 'scores')
     st.write(top10)
 with col2:
@@ -245,17 +246,21 @@ with col2:
     top10_list = top10.index.tolist()
     #df_umap['anomaly'][top10_list] = 'anomaly'
 
-    fig_umap.add_scatter(
-        x=df_umap[0][top10_list],
-        y=df_umap[1][top10_list],
-        #x=0,
-        #y=1,
-        color_discrete_sequence=["red"],
-        #color="anomaly",
-        hover_data=[df_umap.loc[top10_list].index],
-        opacity=0.7
+    fig_umap.add_trace(
+        go.Scatter(
+            x=df_umap.loc[top10_list, 0],
+            y=df_umap.loc[top10_list, 1],
+            #x=0,
+            #y=1,
+            #color_discrete_sequence=["red"],
+            #color="anomaly",
+            #hover_data=[df_umap.loc[top10_list,].index],
+            mode='markers',
+            opacity=1
+            )
         )
-    st.write(fig_umap.show())
+    st.write(fig_umap)
+    st.write(df_umap.loc[top10_list, 0:1])
 st.write('---')
 
 
@@ -266,7 +271,8 @@ anomaly_select = st.selectbox('Selected index number', options = (top10_list))
 
 df_ano = df.copy()
 df_ano['anomaly'] = 'other'
-df_ano['anomaly'][anomaly_select] = 'anomaly'
+#df_ano['anomaly'][anomaly_select] = 'anomaly'
+df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
 
 x_axes = st.selectbox('Selected variable on X axes', options = (df_ano.columns)) 
 y_axes = st.selectbox('Selected variable on Y axes', options = (df_ano.columns)) 
