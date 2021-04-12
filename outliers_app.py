@@ -212,58 +212,57 @@ st.write('---')
 
 # Interpret anomalies
 st.header('**Interpret individual anomalies**')
-if st.button('Interpret individual anomalies'):
-    st.write('Select an individual top 10 anomaly to view the position of the anomaly in histograms.')
-    
-    col3, col4 = st.beta_columns(2)
-    with col3:
-        anomaly_select = st.selectbox('Selected index number', options = (top10_list)) 
-        df_ano = df.copy()
-        df_ano['anomaly'] = 'other'
-        df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
+st.write('Select an individual top 10 anomaly to view the position of the anomaly in histograms.')
 
-        x_axes = st.selectbox('Selected variable on X axes', options = (features)) 
-        y_axes = st.selectbox('Selected variable on Y axes', options = list(set(features).difference(x_axes))) 
-    with col4:
-        # UMAP
-        @st.cache
-        def make_umap(data):
-            reducer = umap.UMAP()
-            embedding = reducer.fit_transform(data)
-            df = pd.DataFrame(embedding)
-            return df
-        df_umap = make_umap(data = X)
+col3, col4 = st.beta_columns(2)
+with col3:
+    anomaly_select = st.selectbox('Selected index number', options = (top10_list)) 
+    df_ano = df.copy()
+    df_ano['anomaly'] = 'other'
+    df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
 
-        fig_umap = px.scatter(
-            df_umap,
-            x=0,
-            y=1,
-            title="uMAP Plot with Outliers",
-            opacity=0.7
+    x_axes = st.selectbox('Selected variable on X axes', options = (features)) 
+    y_axes = st.selectbox('Selected variable on Y axes', options = list(set(features).difference(x_axes))) 
+with col4:
+    # UMAP
+    @st.cache
+    def make_umap(data):
+        reducer = umap.UMAP()
+        embedding = reducer.fit_transform(data)
+        df = pd.DataFrame(embedding)
+        return df
+    df_umap = make_umap(data = X)
+
+    fig_umap = px.scatter(
+        df_umap,
+        x=0,
+        y=1,
+        title="uMAP Plot with Outliers",
+        opacity=0.7
+        )
+
+    fig_umap.add_trace(
+        go.Scatter(
+            x=df_umap.loc[top10_list, 0],
+            y=df_umap.loc[top10_list, 1],
+            mode='markers',
+            opacity=1
             )
+        )
+    st.write(fig_umap)
 
-        fig_umap.add_trace(
-            go.Scatter(
-                x=df_umap.loc[top10_list, 0],
-                y=df_umap.loc[top10_list, 1],
-                mode='markers',
-                opacity=1
-                )
-            )
-        st.write(fig_umap)
+col5, col6 = st.beta_columns(2)
+with col5:
+    fig_hist = px.histogram(df_ano,
+    x=df_ano[x_axes],
+    color='anomaly')
+    fig_hist.add_vline(x=df_ano[x_axes][anomaly_select], line_width=3, line_dash="dash", line_color="#f63366")
+    st.write(fig_hist)
+with col6:
+    fig_scatter = px.scatter(df_ano,
+    x=df_ano[x_axes],
+    y=df_ano[y_axes],
+    color='anomaly')
+    st.write(fig_scatter)
 
-    col5, col6 = st.beta_columns(2)
-    with col5:
-        fig_hist = px.histogram(df_ano,
-        x=df_ano[x_axes],
-        color='anomaly')
-        fig_hist.add_vline(x=df_ano[x_axes][anomaly_select], line_width=3, line_dash="dash", line_color="#f63366")
-        st.write(fig_hist)
-    with col6:
-        fig_scatter = px.scatter(df_ano,
-        x=df_ano[x_axes],
-        y=df_ano[y_axes],
-        color='anomaly')
-        st.write(fig_scatter)
-
-    st.write('---')
+st.write('---')
