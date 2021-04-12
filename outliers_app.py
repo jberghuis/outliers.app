@@ -58,13 +58,14 @@ else:
     st.info('Awaiting for CSV file to be uploaded. Now using the example Pima Diabetes dataset below.')
     @st.cache
     def load_data():
-        url = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"
-        names = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
-        pima = pd.read_csv(url, names=names)
-        return pima
+        # url = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"
+        # names = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
+        # pima = pd.read_csv(url, names=names)
+        # return pima
         #titanic = sns.load_dataset('titanic')
         #titanic = titanic.copy()
-        #return titanic
+        titanic = pd.read_csv('train.csv')
+        return titanic
     df = load_data()
 st.write('---')
 
@@ -72,21 +73,25 @@ st.write('---')
 st.header('**Explore data**')
 st.write('Below you can see the first 10 rows of the dataset.')
 st.write(df.astype('object').head(10))
-#st.write(df.dtypes)
+st.write(df.dtypes.to_frame(name = 'dtypes'))
+st.write(df.dtypes.to_frame(name = 'dtypes').T)
 st.write('Descriptive statistics that summarize the central tendency, dispersion and shape of a dataset’s distribution, excluding missing values:')
-st.write(df.describe(include = 'all'))
+st.write(df.describe(include = 'all').round(2).T)
 
 st.write('Count total missing in each column:')
 missing = df.isnull().sum().to_frame(name = 'missing').T
 percent_missing = df.isnull().sum() * 100 / len(df)
-percent_missing = percent_missing.to_frame(name = '%missing').T
-st.write(pd.concat([missing, percent_missing]))
+percent_missing = percent_missing.to_frame(name = '%missing').round().T
+missing = pd.concat([missing, percent_missing])
+st.write(missing)
 
-st.write('Press the button below to generate a pair plot:')
-if st.button('Generate Seaborn Pairplot'):
-    fig = sns.pairplot(df, diag_kind="kde")
-    fig.map_lower(sns.kdeplot, levels=4, color=".2")
-    st.pyplot(fig)
+st.write(pd.concat([df.dtypes.to_frame(name = 'dtypes').T, df.describe(include = 'all'), missing, percent_missing]).round(2))
+
+# st.write('Press the button below to generate a pair plot:')
+# if st.button('Generate Seaborn Pairplot'):
+#     fig = sns.pairplot(df, diag_kind="kde")
+#     fig.map_lower(sns.kdeplot, levels=4, color=".2")
+#     st.pyplot(fig)
 
 #st.write('Press the button below to generate a full exploratory data analyses report (using Pandas Profiling).')
 #if st.button('Generate Pandas Profiling Report'):
@@ -98,19 +103,20 @@ st.write('---')
 # Preprocess data
 st.header('**Preprocess data**')
 st.subheader('Select features')
-st.write('Select features / variables that will go into anomaly detection model:')
+st.write('**Select features**, variables that will go into anomaly detection model.')
 features = st.multiselect('Selected features:', options = df.columns.tolist(), default = df.columns.tolist())
 df_model = df[features]
-df_id = df[df.columns[~df.columns.isin(features)]]
-#df_id.insert(0, 'ID', range(0, len(df_id)))
 
-st.write('**Model features** in selection, column types and first 5 rows:')
-st.write(df_model.dtypes.to_frame(name = 'dtypes').T)
-st.write(df_model.astype('object').head(5))
-
-st.write('**Not** in selection (assumed ID variables), column types and first 5 rows:')
-st.write(df_id.dtypes.to_frame(name = 'dtypes').T)
-st.write(df_id.astype('object').head(5))
+notfeatures = list(set(df.columns.tolist()).difference(features))
+idvars = []
+if notfeatures:
+    st.write('**Select ID variables**:')
+    idvars = st.multiselect('Selected ID variables:', options = notfeatures, default = notfeatures)
+    removedvars = list(set(notfeatures).difference(idvars))
+    if removedvars:
+        st.write('**Removed variables**:')
+        st.markdown(removedvars)
+df_id = df[idvars]
 st.write('---')
 
 st.subheader('Missing values')
@@ -274,8 +280,8 @@ df_ano['anomaly'] = 'other'
 #df_ano['anomaly'][anomaly_select] = 'anomaly'
 df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
 
-x_axes = st.selectbox('Selected variable on X axes', options = (df_ano.columns)) 
-y_axes = st.selectbox('Selected variable on Y axes', options = (df_ano.columns)) 
+x_axes = st.selectbox('Selected variable on X axes', options = (features)) 
+y_axes = st.selectbox('Selected variable on Y axes', options = list(set(features).difference(x_axes))) 
 
 
 fig_hist = px.histogram(df_ano,
