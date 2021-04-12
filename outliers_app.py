@@ -238,18 +238,14 @@ if st.button('Interpret individual anomalies'):
             df_umap,
             x=0,
             y=1,
-            title="uMAP Plot with Outlier",
+            title="uMAP Plot with Outliers",
             opacity=0.7
             )
 
-        st.write(df_umap.loc[anomaly_select,])
-
         fig_umap.add_trace(
             go.Scatter(
-                x=anomaly_select[0],
-                y=anomaly_select[1],
-                #x=df_umap.loc[[anomaly_select], 0],
-                #y=df_umap.loc[anomaly_select, 1],
+                x=df_umap.loc[top10_list, 0],
+                y=df_umap.loc[top10_list, 1],
                 mode='markers',
                 opacity=1
                 )
