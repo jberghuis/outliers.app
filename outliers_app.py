@@ -1,15 +1,10 @@
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import plotly.express as px
 import plotly.graph_objs as go
 import streamlit as st
 import umap
 
-#from pandas_profiling import ProfileReport
-#from streamlit_pandas_profiling import st_profile_report
-
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder 
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
@@ -44,7 +39,7 @@ st.write('---')
 # Select data
 st.header('**Select data**')
 st.markdown('''
-Upload your own CSV file below or continue using the example Pima Diabetes dataset.
+Upload your own CSV file below or continue using the example Titanic dataset.
 ''')
 uploaded_file = st.file_uploader("", type=["csv"])
 
@@ -55,15 +50,9 @@ if uploaded_file is not None:
         return csv
     df = load_csv()
 else:
-    st.info('Awaiting for CSV file to be uploaded. Now using the example Pima Diabetes dataset below.')
+    st.info('Awaiting for CSV file to be uploaded. Now using the example Titanic dataset below.')
     @st.cache
     def load_data():
-        # url = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv"
-        # names = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
-        # pima = pd.read_csv(url, names=names)
-        # return pima
-        #titanic = sns.load_dataset('titanic')
-        #titanic = titanic.copy()
         titanic = pd.read_csv('train.csv')
         return titanic
     df = load_data()
@@ -71,33 +60,19 @@ st.write('---')
 
 # Explore data
 st.header('**Explore data**')
-st.write('Below you can see the first 10 rows of the dataset.')
-st.write(df.astype('object').head(10))
-st.write(df.dtypes.to_frame(name = 'dtypes'))
-st.write(df.dtypes.to_frame(name = 'dtypes').T)
-st.write('Descriptive statistics that summarize the central tendency, dispersion and shape of a dataset’s distribution, excluding missing values:')
-st.write(df.describe(include = 'all').round(2).T)
+st.write('Below you can see the first 50 rows of the dataset.')
+st.write(df.astype('object').head(50))
 
-st.write('Count total missing in each column:')
-missing = df.isnull().sum().to_frame(name = 'missing').T
+st.write('Column types, descriptive statistics and missing values:')
+coltypes = df.dtypes.to_frame(name = 'dtypes')
+coldescribe = df.describe(include = 'all').round(2).T
+
+missing = df.isnull().sum().to_frame(name = 'missing')
 percent_missing = df.isnull().sum() * 100 / len(df)
-percent_missing = percent_missing.to_frame(name = '%missing').round().T
-missing = pd.concat([missing, percent_missing])
-st.write(missing)
+percent_missing = percent_missing.to_frame(name = '%missing').round()
+colmissing = pd.concat([missing, percent_missing], axis=1)
 
-st.write(pd.concat([df.dtypes.to_frame(name = 'dtypes').T, df.describe(include = 'all'), missing, percent_missing]).round(2))
-
-# st.write('Press the button below to generate a pair plot:')
-# if st.button('Generate Seaborn Pairplot'):
-#     fig = sns.pairplot(df, diag_kind="kde")
-#     fig.map_lower(sns.kdeplot, levels=4, color=".2")
-#     st.pyplot(fig)
-
-#st.write('Press the button below to generate a full exploratory data analyses report (using Pandas Profiling).')
-#if st.button('Generate Pandas Profiling Report'):
-#    pr = ProfileReport(df.astype('object'), explorative=True)
-#    st_profile_report(pr)
-
+st.write(pd.concat([coltypes, coldescribe, colmissing], axis=1).round(2))
 st.write('---')
 
 # Preprocess data
@@ -146,28 +121,12 @@ else:
         return data
     df_model = impute_missing(data = df_model)
 
-st.write('Missing data handling results (first 10 rows):')
-st.write(df_model.astype('object').head(10))
-
-st.write('Descriptive statistics after handling of missing data:')
-st.write(df_model.describe(include = 'all'))
-
-st.write('Count total missing in each column after missing data handling:')
-missing = df_model.isnull().sum().to_frame(name = 'missing').T
-percent_missing = df_model.isnull().sum() * 100 / len(df_model)
-percent_missing = percent_missing.to_frame(name = '%missing').T
-st.write(pd.concat([missing, percent_missing]))
 st.write('---')
 
 st.subheader('One hot encoding')
 # One hot encoding for categorical variables
 cats = df_model.dtypes == 'object'
-le = LabelEncoder() 
-for x in df_model.columns[cats]:
-    sum(pd.isna(df_model[x]))
-    df_model.loc[:,x] = le.fit_transform(df_model[x])
-onehotencoder = OneHotEncoder() 
-df_model.loc[:, ~cats].join(pd.DataFrame(data=onehotencoder.fit_transform(df_model.loc[:,cats]).toarray(), columns= onehotencoder.get_feature_names()))
+df_model = pd.get_dummies(df_model, columns=df_model.columns[cats].tolist(), drop_first=True)
 st.write('Dummies are created for the selected categorical features (One hot encoding):')
 st.write(df_model.head())
 st.write('---')
@@ -179,9 +138,26 @@ scaler = StandardScaler()
 scaler.fit(X)
 X = pd.DataFrame(scaler.transform(X))
 X.columns = df_model.columns
-st.write('The selected features are standardized using the StandardScaler:')
-st.write(X.head())
+st.write('The selected features are standardized using the StandardScaler.')
 st.write('---')
+
+st.subheader('**Data after preprocessing**')
+# Standardize the feature data
+st.write('Below you can see the first 50 rows of the dataset.')
+st.write(X.head(50))
+
+st.write('Column types, descriptive statistics and missing values:')
+coltypes = X.dtypes.to_frame(name = 'dtypes')
+coldescribe = X.describe(include = 'all').round(2).T
+
+missing = X.isnull().sum().to_frame(name = 'missing')
+percent_missing = X.isnull().sum() * 100 / len(X)
+percent_missing = percent_missing.to_frame(name = '%missing').round()
+colmissing = pd.concat([missing, percent_missing], axis=1)
+
+st.write(pd.concat([coltypes, coldescribe, colmissing], axis=1).round(2))
+st.write('---')
+
 
 # Run outlier detection models
 st.header('**Fit outlier detection model**')
@@ -219,87 +195,79 @@ with col1:
     else:
         clf = COPOD()
     
+
     # fit the model
     clf.fit(X)
     # get outlier scores
     scores = clf.decision_scores_  # raw outlier scores
-    
+
+with col2:
     st.write('Top 10 anomaly scores for the', model, 'model:')
     df_id.loc[:,'scores'] = scores
     top10 = df_id.nlargest(10, 'scores')
-    st.write(top10)
-with col2:
-    # UMAP
-    @st.cache
-    def make_umap(data):
-        reducer = umap.UMAP()
-        embedding = reducer.fit_transform(data)
-        df = pd.DataFrame(embedding)
-        #df['anomaly'] = 'other'
-        return df
-    df_umap = make_umap(data = X)
-
-    fig_umap = px.scatter(
-        df_umap,
-        x=0,
-        y=1,
-        #color="anomaly",
-        title="uMAP Plot with Outliers",
-        #hover_data=[df_umap.index],
-        opacity=0.7
-        )
-
     top10_list = top10.index.tolist()
-    #df_umap['anomaly'][top10_list] = 'anomaly'
+    st.write(top10)
 
-    fig_umap.add_trace(
-        go.Scatter(
-            x=df_umap.loc[top10_list, 0],
-            y=df_umap.loc[top10_list, 1],
-            #x=0,
-            #y=1,
-            #color_discrete_sequence=["red"],
-            #color="anomaly",
-            #hover_data=[df_umap.loc[top10_list,].index],
-            mode='markers',
-            opacity=1
-            )
-        )
-    st.write(fig_umap)
-    st.write(df_umap.loc[top10_list, 0:1])
 st.write('---')
-
 
 # Interpret anomalies
 st.header('**Interpret individual anomalies**')
-st.write('Select an individual top 10 anomaly to view the position of the anomaly in histograms.')
-anomaly_select = st.selectbox('Selected index number', options = (top10_list)) 
+if st.button('Interpret individual anomalies'):
+    st.write('Select an individual top 10 anomaly to view the position of the anomaly in histograms.')
+    
+    col3, col4 = st.beta_columns(2)
+    with col3:
+        anomaly_select = st.selectbox('Selected index number', options = (top10_list)) 
+        df_ano = df.copy()
+        df_ano['anomaly'] = 'other'
+        df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
 
-df_ano = df.copy()
-df_ano['anomaly'] = 'other'
-#df_ano['anomaly'][anomaly_select] = 'anomaly'
-df_ano.loc[anomaly_select,'anomaly'] = 'anomaly'
+        x_axes = st.selectbox('Selected variable on X axes', options = (features)) 
+        y_axes = st.selectbox('Selected variable on Y axes', options = list(set(features).difference(x_axes))) 
+    with col4:
+        # UMAP
+        @st.cache
+        def make_umap(data):
+            reducer = umap.UMAP()
+            embedding = reducer.fit_transform(data)
+            df = pd.DataFrame(embedding)
+            return df
+        df_umap = make_umap(data = X)
 
-x_axes = st.selectbox('Selected variable on X axes', options = (features)) 
-y_axes = st.selectbox('Selected variable on Y axes', options = list(set(features).difference(x_axes))) 
+        fig_umap = px.scatter(
+            df_umap,
+            x=0,
+            y=1,
+            title="uMAP Plot with Outlier",
+            opacity=0.7
+            )
 
+        st.write(df_umap.loc[anomaly_select,])
 
-fig_hist = px.histogram(df_ano,
-    x=df_ano[x_axes],
-    color='anomaly')
-fig_hist.add_vline(x=df_ano[x_axes][anomaly_select], line_width=3, line_dash="dash", line_color="#f63366")
-fig_scatter = px.scatter(df_ano,
-    x=df_ano[x_axes],
-    y=df_ano[y_axes],
-    color='anomaly')
+        fig_umap.add_trace(
+            go.Scatter(
+                x=anomaly_select[0],
+                y=anomaly_select[1],
+                #x=df_umap.loc[[anomaly_select], 0],
+                #y=df_umap.loc[anomaly_select, 1],
+                mode='markers',
+                opacity=1
+                )
+            )
+        st.write(fig_umap)
 
-col3, col4 = st.beta_columns(2)
-with col3:
-    st.write(fig_hist)
-with col4:
-    st.write(fig_scatter)
+    col5, col6 = st.beta_columns(2)
+    with col5:
+        fig_hist = px.histogram(df_ano,
+        x=df_ano[x_axes],
+        color='anomaly')
+        fig_hist.add_vline(x=df_ano[x_axes][anomaly_select], line_width=3, line_dash="dash", line_color="#f63366")
+        st.write(fig_hist)
+    with col6:
+        fig_scatter = px.scatter(df_ano,
+        x=df_ano[x_axes],
+        y=df_ano[y_axes],
+        color='anomaly')
+        st.write(fig_scatter)
 
-#fig_ano = sns.pairplot(df_ano, hue='anomaly', diag_kind='hist')
-#st.pyplot(fig_ano)
-
-st.write('---')
+    st.write('---')
